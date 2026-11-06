@@ -230,7 +230,16 @@ public class Bb implements Serializable {
                     """;
             this.listeRolesSysteme.add(new SelectItem(role, "Guide touristique"));
         }
+        String role = """
+        Tu es un coach de voyage écologique.
+        Réponds toujours en français avec un ton enthousiaste.
+        Pour chaque destination, propose une activité respectueuse de l'environnement,
+        un conseil pratique et une recommandation de sécurité.
+        """;
 
+        this.listeRolesSysteme.add(
+                new SelectItem(role, "Coach de voyage écologique")
+        );
         return this.listeRolesSysteme;
     }
 
