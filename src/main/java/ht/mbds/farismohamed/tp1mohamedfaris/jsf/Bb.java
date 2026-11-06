@@ -1,7 +1,8 @@
 package ht.mbds.farismohamed.tp1mohamedfaris.jsf; // A modifier...
 
 
-import ht.mbds.farismohamed.tp1mohamedfaris.service.GenerateurReponse;
+import ht.mbds.farismohamed.tp1mohamedfaris.jsf.llm.JsonAdapterPourGemini;
+import ht.mbds.farismohamed.tp1mohamedfaris.jsf.llm.LlmInteraction;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.model.SelectItem;
@@ -12,6 +13,7 @@ import jakarta.inject.Named;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Arrays;
 
 /**
  * Backing bean pour la page JSF index.xhtml.
@@ -52,11 +54,12 @@ public class Bb implements Serializable {
      */
     private StringBuilder conversation = new StringBuilder();
 
-    /**
-     * Service pour modifier la question et générer la réponse.
-     */
+    private boolean debug;
+    private String texteRequeteJson;
+    private String texteReponseJson;
+
     @Inject
-    private GenerateurReponse generateurReponse;
+    private JsonAdapterPourGemini jsonAdapter;
 
     /**
      * Contexte JSF. Utilisé pour qu'un message d'erreur s'affiche dans le formulaire.
@@ -111,6 +114,30 @@ public class Bb implements Serializable {
         this.conversation = new StringBuilder(conversation);
     }
 
+    public boolean isDebug() {
+        return debug;
+    }
+
+    public void setDebug(boolean debug) {
+        this.debug = debug;
+    }
+
+    public String getTexteRequeteJson() {
+        return texteRequeteJson;
+    }
+
+    public void setTexteRequeteJson(String texteRequeteJson) {
+        this.texteRequeteJson = texteRequeteJson;
+    }
+
+    public String getTexteReponseJson() {
+        return texteReponseJson;
+    }
+
+    public void setTexteReponseJson(String texteReponseJson) {
+        this.texteReponseJson = texteReponseJson;
+    }
+
     /**
      * Envoie la question au serveur.
      * En attendant de l'envoyer à un LLM, le serveur fait un traitement quelconque, juste pour tester :
@@ -128,12 +155,28 @@ public class Bb implements Serializable {
             return null;
         }
 
-        // Traite la question pour construire la réponse.
         if (this.conversation.isEmpty()) { // Si la conversation n'a pas encore commencé
             // Fige la liste déroulante qui permet de choisir le rôle système
             this.roleSystemeChangeable = false;
+            this.jsonAdapter.setSystemRole(this.roleSysteme);
         }
-        this.reponse = this.generateurReponse.genererReponse(this.question, this.roleSysteme);
+
+        try {
+            LlmInteraction interaction = jsonAdapter.envoyerRequete(question);
+            this.reponse = interaction.reponseExtraite();
+            this.texteRequeteJson = interaction.questionJson();
+            this.texteReponseJson = interaction.reponseJson();
+        } catch (Exception e) {
+            this.reponse = "Erreur : " + e.getMessage();
+            FacesMessage message = new FacesMessage(
+                    FacesMessage.SEVERITY_ERROR,
+                    "Problème de connexion avec l'API du LLM",
+                    "Problème de connexion avec l'API du LLM"
+                            + e.getMessage() + "\n"
+                            + Arrays.toString(e.getStackTrace())
+            );
+            facesContext.addMessage(null, message);
+        }
 
         // La conversation contient l'historique des questions-réponses depuis le début.
         afficherConversation();
