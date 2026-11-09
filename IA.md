@@ -31,6 +31,3 @@ techniques.
 - **Réponse de l'IA :** Conseils de test et de vérification.
 - **Ce que j'ai appris :** L'importance de tester chaque modification et de
   conserver une version fonctionnelle avec Git.
-
-Toutes les modifications ont été relues, comprises et réalisées dans mon
-projet.
